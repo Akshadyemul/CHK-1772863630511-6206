@@ -11,8 +11,11 @@ import {
 
 import { useRouter } from "expo-router";
 import { LargeButton } from "../components/LargeButton";
+import { Colors } from "../constants/theme";
 import { scanBarcode } from "../services/api";
 import { addHistoryItem } from "../services/historyService";
+
+const NOT_FOUND_MESSAGE = "Medicine not found. Please search medicine name.";
 
 function getMedicineTitle(medicine) {
   if (!medicine) return "";
@@ -66,6 +69,7 @@ export default function ScanQR() {
           const med = data.medicine;
           setMedicine(med);
           setNotFoundMessage("");
+          setError("");
           await addHistoryItem({
             medicineName: getMedicineTitle(med) || value,
             medicineData: med,
@@ -79,7 +83,9 @@ export default function ScanQR() {
           );
         }
       } catch (e) {
-        setError(e?.message || "Could not find medicine for this barcode.");
+        setMedicine(null);
+        setError(e?.message || NOT_FOUND_MESSAGE);
+        setNotFoundMessage("");
       } finally {
         setLoading(false);
       }
@@ -107,12 +113,12 @@ export default function ScanQR() {
 
         {hasPermission === null ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color="#1E88E5" />
+            <ActivityIndicator size="large" color={Colors.primary} />
             <Text style={styles.statusText}>Requesting camera permission…</Text>
           </View>
         ) : hasPermission === false ? (
           <View style={styles.center}>
-            <Text style={styles.error}>
+            <Text style={styles.errorText}>
               Camera permission is required to scan barcodes. Please enable it
               in your phone settings.
             </Text>
@@ -136,42 +142,56 @@ export default function ScanQR() {
             <Text style={styles.hint}>No barcode scanned yet.</Text>
           )}
 
-          {loading ? <ActivityIndicator size="large" color="#1E88E5" /> : null}
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {loading ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Looking up product…</Text>
+            </View>
+          ) : null}
+
+          {error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : null}
 
           {!loading && notFoundMessage ? (
-            <>
-              <Text style={styles.error}>{notFoundMessage}</Text>
+            <View style={styles.notFoundWrap}>
+              <Text style={styles.errorText}>{NOT_FOUND_MESSAGE}</Text>
               <LargeButton
                 title="Search Medicine Name"
                 variant="secondary"
                 onPress={() => router.push("/screens/SearchMedicineScreen")}
+                accessibilityLabel="Search medicine by name"
               />
-            </>
+            </View>
           ) : null}
 
           {medicine ? (
             <View style={styles.card}>
               <Text style={styles.cardTitle}>
-                {getMedicineTitle(medicine) || "Medicine found"}
+                {getMedicineTitle(medicine) || "Product found"}
               </Text>
-              <Text style={styles.cardBody}>
-                {JSON.stringify(medicine, null, 2)}
-              </Text>
+              {medicine.brand ? (
+                <Text style={styles.cardBrand}>Brand: {medicine.brand}</Text>
+              ) : null}
               <LargeButton
-                title="Open Details"
+                title="View Details"
                 onPress={() =>
                   router.push({
                     pathname: "/screens/MedicineDetailsScreen",
                     params: { medicine: JSON.stringify(medicine) },
                   })
                 }
+                accessibilityLabel="View full medicine details"
               />
             </View>
           ) : null}
 
-          {scanned ? (
-            <LargeButton title="Scan Again" onPress={resetScan} />
+          {scanned && !loading ? (
+            <LargeButton
+              title="Scan Again"
+              onPress={resetScan}
+              accessibilityLabel="Scan another barcode"
+            />
           ) : null}
         </ScrollView>
       </View>
@@ -180,16 +200,26 @@ export default function ScanQR() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F6F8FB" },
+  safe: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1, padding: 20 },
-  title: { fontSize: 28, fontWeight: "800", color: "#0B2D4D", marginBottom: 8 },
-  body: { fontSize: 20, color: "#2B4A66", lineHeight: 28, marginBottom: 12 },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  body: {
+    fontSize: 20,
+    color: Colors.textMuted,
+    lineHeight: 28,
+    marginBottom: 12,
+  },
   cameraWrap: {
     height: 320,
     borderRadius: 18,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "#D6E1EC",
+    borderColor: Colors.border,
     backgroundColor: "#000000",
   },
   overlay: {
@@ -212,31 +242,58 @@ const styles = StyleSheet.create({
   barcodeText: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#0B2D4D",
+    color: Colors.text,
     marginBottom: 8,
   },
-  hint: { fontSize: 18, color: "#2B4A66", marginBottom: 8 },
-  error: { marginTop: 8, fontSize: 18, color: "#B00020", lineHeight: 24 },
+  hint: {
+    fontSize: 18,
+    color: Colors.textMuted,
+    marginBottom: 8,
+  },
+  loadingWrap: {
+    marginTop: 12,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: Colors.textMuted,
+    fontWeight: "600",
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 18,
+    color: Colors.error,
+    lineHeight: 26,
+    fontWeight: "600",
+  },
+  notFoundWrap: {
+    marginTop: 12,
+  },
   center: { paddingVertical: 16 },
-  statusText: { marginTop: 10, fontSize: 18, color: "#2B4A66" },
+  statusText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: Colors.textMuted,
+  },
   card: {
     marginTop: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.surface,
     borderWidth: 2,
-    borderColor: "#D6E1EC",
+    borderColor: Colors.border,
     borderRadius: 16,
-    padding: 14,
+    padding: 18,
   },
   cardTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "800",
-    color: "#0B2D4D",
-    marginBottom: 8,
+    color: Colors.text,
+    marginBottom: 6,
   },
-  cardBody: {
-    fontSize: 16,
-    color: "#2B4A66",
-    lineHeight: 22,
-    marginBottom: 12,
+  cardBrand: {
+    fontSize: 18,
+    color: Colors.textMuted,
+    marginBottom: 16,
+    fontWeight: "600",
   },
 });

@@ -33,7 +33,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="scan"
+        name="scanqr"
         options={{
           title: "Scan",
           tabBarIcon: ({ color, focused }) => (
