@@ -1,12 +1,22 @@
 import { Tabs } from "expo-router";
-
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Colors } from "../constants/theme";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#ffd33d",
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarStyle: {
+          backgroundColor: Colors.surface,
+          borderTopColor: Colors.border,
+          borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -15,9 +25,22 @@ export default function TabLayout() {
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "home-sharp" : "home-outline"}
+              name={focused ? "home" : "home-outline"}
               color={color}
-              size={24}
+              size={26}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: "Scan",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "qr-code" : "qr-code-outline"}
+              color={color}
+              size={26}
             />
           ),
         }}
@@ -25,27 +48,25 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reminder"
         options={{
-          title: "Reminder",
+          title: "Reminders",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "alarm" : "alarm-outline"}
               color={color}
-              size={24}
+              size={26}
             />
           ),
         }}
       />
       <Tabs.Screen
-        name="about"
+        name="history"
         options={{
-          title: "About",
+          title: "History",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={
-                focused ? "information-circle" : "information-circle-outline"
-              }
+              name={focused ? "time" : "time-outline"}
               color={color}
-              size={24}
+              size={26}
             />
           ),
         }}
